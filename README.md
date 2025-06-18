@@ -15,6 +15,12 @@ A lightweight terminal-based chess engine using `python-chess`, can play against
 - Likely to use different kernels for Black and White pieces, possibly a kernel for each type of chess-piece
 
 
+## Notes
+
+- Cutechess is an attempt to make my engine UCI compatible such that i can evaluate my models performance (ELO) against Stockfish
+- No significant progress has been made, the documentation is sparse for this
+
+
 ## Setup
 
 ```bash
