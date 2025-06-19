@@ -10,17 +10,12 @@ A lightweight terminal-based chess engine using `python-chess`, can play against
 
 ## Version 2 `chess_engine2.py` [Functions as is]
 
-- Runs of opensource local chess engine, stockfish
+- Runs of open source local chess engine, stockfish
 
 ## Version 3 `chess_engine3.py` [WIP]
 
 - Going to be built off Version 1
 - Improvements in Kernels, different for each side
-
-## Notes
-
-- Cutechess is an attempt to make my engine UCI compatible such that I can evaluate my models performance (ELO) against Stockfish
-- No significant progress has been made, the documentation is sparse for this
 
 
 ## Setup
