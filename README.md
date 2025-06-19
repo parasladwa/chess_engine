@@ -8,16 +8,18 @@ A lightweight terminal-based chess engine using `python-chess`, can play against
 - Evaluates position based of static board scalar values called `kernel`
 - Minimax with alpha beta pruning with default depth of 4
 
-## Version 2 `chess_engine2.py` [WIP]
+## Version 2 `chess_engine2.py` [Functions as is]
 
-- Cannot increase depth of minimax function, too computationally expensive, the engines moves will take too long
-- Improvements will be implemented upon the evaluation function
-- Likely to use different kernels for Black and White pieces, possibly a kernel for each type of chess-piece
+- Runs of opensource local chess engine, stockfish
 
+## Version 3 `chess_engine3.py` [WIP]
+
+- Going to be built off Version 1
+- Improvements in Kernels, different for each side
 
 ## Notes
 
-- Cutechess is an attempt to make my engine UCI compatible such that i can evaluate my models performance (ELO) against Stockfish
+- Cutechess is an attempt to make my engine UCI compatible such that I can evaluate my models performance (ELO) against Stockfish
 - No significant progress has been made, the documentation is sparse for this
 
 

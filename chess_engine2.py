@@ -1,6 +1,10 @@
 import chess
 import numpy as np
 import time
+from stockfish import Stockfish
+
+stockfish = Stockfish(path=r"C:\Users\paras\Desktop\Personal\stockfish\stockfish-windows-x86-64-avx2.exe", depth=15)
+stockfish.update_engine_parameters({"Hash": 2048, "Threads": 4})
 
 
 kernel = np.array([[0, 5, 5, 5, 5, 5, 5, 0,],
@@ -31,30 +35,7 @@ piece_score = {
 
 
  
-def evaluate_board(board):
-    total = 0
 
-    for square in chess.SQUARES:
-        piece = board.piece_at(square)
-        if piece is None:
-            continue
-
-        symbol = piece.symbol()
-        color = piece.color  # True for white, False for black
-        base_score = abs(piece_score[symbol])  # use positive value
-
-        file = chess.square_file(square)
-        rank = chess.square_rank(square)
-        kernel_row = 7 - rank if color == chess.WHITE else rank
-        kernel_col = file
-
-        positional_bonus = kernel[kernel_row, kernel_col]
-        score = base_score + positional_bonus
-
-        # Add as + for white, - for black
-        total += score if color == chess.WHITE else -score
-
-    return total
 
 
 
@@ -75,44 +56,6 @@ def print_board(board, user_is_white=True):
     print("   ---------------")
     print("   " + " ".join(files))
 
-
-
-
-DEPTH = 4
-def minimax(board, is_maximizing, depth=DEPTH, alpha=float('-inf'), beta=float('inf')):
-    if depth == 0 or board.is_game_over():
-        return evaluate_board(board)
-
-    if is_maximizing:
-        max_eval = float('-inf')
-        best_move = None
-        for move in board.legal_moves:
-            board.push(move)
-            eval = minimax(board, False, depth - 1, alpha, beta)
-            board.pop()
-            if eval > max_eval:
-                max_eval = eval
-                if depth == DEPTH:
-                    best_move = move
-            alpha = max(alpha, eval)
-            if beta <= alpha:
-                break
-        return best_move if depth == DEPTH else max_eval
-    else:
-        min_eval = float('inf')
-        best_move = None
-        for move in board.legal_moves:
-            board.push(move)
-            eval = minimax(board, True, depth - 1, alpha, beta)
-            board.pop()
-            if eval < min_eval:
-                min_eval = eval
-                if depth == DEPTH:
-                    best_move = move
-            beta = min(beta, eval)
-            if beta <= alpha:
-                break
-        return best_move if depth == DEPTH  else min_eval
 
 
 
@@ -144,7 +87,17 @@ def main():
             # Computer's turn
             print("Computer thinking...")
             start = time.time()
-            move = minimax(board, not user_is_white)
+
+            
+            
+            
+            stockfish.set_fen_position(board.fen())
+
+            move = stockfish.get_best_move()
+            #convert move to chess.Move object
+            move = chess.Move.from_uci(move)
+            
+            print(move, type(move))
             board.push(move)
             print(f"Computer played: {move.uci()}, time taken: {time.time() - start:.2f} seconds")
 
