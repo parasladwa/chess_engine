@@ -29,7 +29,7 @@ piece_score = {
     'K': -100000  # King
 }
 
-
+#test
  
 def evaluate_board(board):
     total = 0

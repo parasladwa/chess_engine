@@ -1,0 +1,193 @@
+[33mcommit d20e226580bda0804e675a3a0e784969457ba9be[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mtets[m[33m)[m
+Author: Paras Ladwa <154990057+parasladwa@users.noreply.github.com>
+Date:   Thu Jun 19 16:33:23 2025 +0100
+
+    a
+
+[1mdiff --git a/README.md b/README.md[m
+[1mindex cb410b5..4474077 100644[m
+[1m--- a/README.md[m
+[1m+++ b/README.md[m
+[36m@@ -10,18 +10,13 @@[m [mA lightweight terminal-based chess engine using `python-chess`, can play against[m
+ [m
+ ## Version 2 `chess_engine2.py` [Functions as is][m
+ [m
+[31m-- Runs of opensource local chess engine, stockfish[m
+[32m+[m[32m- Runs of open source local chess engine, stockfish[m
+ [m
+ ## Version 3 `chess_engine3.py` [WIP][m
+ [m
+ - Going to be built off Version 1[m
+ - Improvements in Kernels, different for each side[m
+ [m
+[31m-## Notes[m
+[31m-[m
+[31m-- Cutechess is an attempt to make my engine UCI compatible such that I can evaluate my models performance (ELO) against Stockfish[m
+[31m-- No significant progress has been made, the documentation is sparse for this[m
+[31m-[m
+ [m
+ ## Setup[m
+ [m
+[1mdiff --git a/chess_engine3.py b/chess_engine3.py[m
+[1mnew file mode 100644[m
+[1mindex 0000000..7db8185[m
+[1m--- /dev/null[m
+[1m+++ b/chess_engine3.py[m
+[36m@@ -0,0 +1,156 @@[m
+[32m+[m[32mimport chess[m
+[32m+[m[32mimport numpy as np[m
+[32m+[m[32mimport time[m
+[32m+[m
+[32m+[m
+[32m+[m[32mkernel = np.array([[0, 5, 5, 5, 5, 5, 5, 0,],[m
+[32m+[m[32m                  [5, 10, 10, 10, 10, 10, 10, 5],[m
+[32m+[m[32m                  [5, 10, 20, 20, 20, 20, 10, 5],[m
+[32m+[m[32m                  [5, 10, 20, 30, 30, 20, 10, 5],[m
+[32m+[m[32m                  [5, 10, 20, 30, 30, 20, 10, 5],[m
+[32m+[m[32m                  [5, 10, 20, 20, 20, 20, 10, 5],[m
+[32m+[m[32m                  [5, 10, 10, 10, 10, 10, 10, 5],[m
+[32m+[m[32m                  [0, 5, 5, 5, 5, 5, 5, 0]], dtype=int)[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m[32mpiece_score = {[m
+[32m+[m[32m    'p': 100,  # Pawn[m
+[32m+[m[32m    'n': 300,  # Knight[m
+[32m+[m[32m    'b': 350,  # Bishop[m
+[32m+[m[32m    'r': 500,  # Rook[m
+[32m+[m[32m    'q': 900,  # Queen[m
+[32m+[m[32m    'k': 100000,  # King[m
+[32m+[m[32m    'P': -100,  # Pawn[m
+[32m+[m[32m    'N': -300,  # Knight[m
+[32m+[m[32m    'B': -350,  # Bishop[m
+[32m+[m[32m    'R': -500,  # Rook[m
+[32m+[m[32m    'Q': -900,  # Queen[m
+[32m+[m[32m    'K': -100000  # King[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m
+[32m+[m[41m [m
+[32m+[m[32mdef evaluate_board(board):[m
+[32m+[m[32m    total = 0[m
+[32m+[m
+[32m+[m[32m    for square in chess.SQUARES:[m
+[32m+[m[32m        piece = board.piece_at(square)[m
+[32m+[m[32m        if piece is None:[m
+[32m+[m[32m            continue[m
+[32m+[m
+[32m+[m[32m        symbol = piece.symbol()[m
+[32m+[m[32m        color = piece.color  # True for white, False for black[m
+[32m+[m[32m        base_score = abs(piece_score[symbol])  # use positive value[m
+[32m+[m
+[32m+[m[32m        file = chess.square_file(square)[m
+[32m+[m[32m        rank = chess.square_rank(square)[m
+[32m+[m[32m        kernel_row = 7 - rank if color == chess.WHITE else rank[m
+[32m+[m[32m        kernel_col = file[m
+[32m+[m
+[32m+[m[32m        positional_bonus = kernel[kernel_row, kernel_col][m
+[32m+[m[32m        score = base_score + positional_bonus[m
+[32m+[m
+[32m+[m[32m        # Add as + for white, - for black[m
+[32m+[m[32m        total += score if color == chess.WHITE else -score[m
+[32m+[m
+[32m+[m[32m    return total[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef print_board(board, user_is_white=True):[m
+[32m+[m[32m    ranks = range(8, 0, -1) if user_is_white else range(1, 9)[m
+[32m+[m[32m    files = "abcdefgh" if user_is_white else "hgfedcba"[m
+[32m+[m
+[32m+[m[32m    for rank in ranks:[m
+[32m+[m[32m        line = str(rank) + "| "[m
+[32m+[m[32m        for file in files:[m
+[32m+[m[32m            square = chess.parse_square(file + str(rank))[m
+[32m+[m[32m            piece = board.piece_at(square)[m
+[32m+[m[32m            if piece:[m
+[32m+[m[32m                line += piece.symbol() + " "[m
+[32m+[m[32m            else:[m
+[32m+[m[32m                line += ". "[m
+[32m+[m[32m        print(line)[m
+[32m+[m[32m    print("   ---------------")[m
+[32m+[m[32m    print("   " + " ".join(files))[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m[32mDEPTH = 4[m
+[32m+[m[32mdef minimax(board, is_maximizing, depth=DEPTH, alpha=float('-inf'), beta=float('inf')):[m
+[32m+[m[32m    if depth == 0 or board.is_game_over():[m
+[32m+[m[32m        return evaluate_board(board)[m
+[32m+[m
+[32m+[m[32m    if is_maximizing:[m
+[32m+[m[32m        max_eval = float('-inf')[m
+[32m+[m[32m        best_move = None[m
+[32m+[m[32m        for move in board.legal_moves:[m
+[32m+[m[32m            board.push(move)[m
+[32m+[m[32m            eval = minimax(board, False, depth - 1, alpha, beta)[m
+[32m+[m[32m            board.pop()[m
+[32m+[m[32m            if eval > max_eval:[m
+[32m+[m[32m                max_eval = eval[m
+[32m+[m[32m                if depth == DEPTH:[m
+[32m+[m[32m                    best_move = move[m
+[32m+[m[32m            alpha = max(alpha, eval)[m
+[32m+[m[32m            if beta <= alpha:[m
+[32m+[m[32m                break[m
+[32m+[m[32m        return best_move if depth == DEPTH else max_eval[m
+[32m+[m[32m    else:[m
+[32m+[m[32m        min_eval = float('inf')[m
+[32m+[m[32m        best_move = None[m
+[32m+[m[32m        for move in board.legal_moves:[m
+[32m+[m[32m            board.push(move)[m
+[32m+[m[32m            eval = minimax(board, True, depth - 1, alpha, beta)[m
+[32m+[m[32m            board.pop()[m
+[32m+[m[32m            if eval < min_eval:[m
+[32m+[m[32m                min_eval = eval[m
+[32m+[m[32m                if depth == DEPTH:[m
+[32m+[m[32m                    best_move = move[m
+[32m+[m[32m            beta = min(beta, eval)[m
+[32m+[m[32m            if beta <= alpha:[m
+[32m+[m[32m                break[m
+[32m+[m[32m        return best_move if depth == DEPTH  else min_eval[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef main():[m
+[32m+[m[32m    board = chess.Board()[m
+[32m+[m[32m    user = input("Playing as black or white? (b/w): ").strip().lower()[m
+[32m+[m[32m    user_is_white = user == 'w'[m
+[32m+[m
+[32m+[m[32m    print_board(board, user_is_white)[m
+[32m+[m
+[32m+[m[32m    while not board.is_game_over():[m
+[32m+[m[32m        if board.turn == user_is_white:[m
+[32m+[m[32m            # User's turn[m
+[32m+[m[32m            while True:[m
+[32m+[m[32m                move_input = input("Enter your move (e.g., e2e4): ").strip()[m
+[32m+[m[32m                try:[m
+[32m+[m[32m                    move = chess.Move.from_uci(move_input)[m
+[32m+[m[32m                    if move in board.legal_moves:[m
+[32m+[m[32m                        board.push(move)[m
+[32m+[m[32m                        break[m
+[32m+[m[32m                    else:[m
+[32m+[m[32m                        print("Illegal move. Try again.")[m
+[32m+[m[32m                except:[m
+[32m+[m[32m                    print("Invalid move format. Try again.")[m
+[32m+[m[32m        else:[m
+[32m+[m[32m            # Computer's turn[m
+[32m+[m[32m            print("Computer thinking...")[m
+[32m+[m[32m            start = time.time()[m
+[32m+[m[32m            move = minimax(board, not user_is_white)[m
+[32m+[m[32m            board.push(move)[m
+[32m+[m[32m            print(f"Computer played: {move.uci()}, time taken: {time.time() - start:.2f} seconds")[m
+[32m+[m
+[32m+[m[32m        print_board(board, user_is_white)[m
+[32m+[m
+[32m+[m[32m    print("Game over:", board.result())[m
+[32m+[m
+[32m+[m
+[32m+[m[32mmain()[m
+\ No newline at end of file[m
